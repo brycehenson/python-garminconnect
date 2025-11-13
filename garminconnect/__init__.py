@@ -219,6 +219,9 @@ class Garmin:
         self.garmin_connect_training_readiness_url = (
             "/metrics-service/metrics/trainingreadiness"
         )
+        self.garmin_connect_training_load_balance_url = (
+            "/metrics-service/metrics/trainingloadbalance"
+        )
 
         self.garmin_connect_race_predictor_url = (
             "/metrics-service/metrics/racepredictions"
@@ -1329,6 +1332,15 @@ class Garmin:
         cdate = _validate_date_format(cdate, "cdate")
         url = f"{self.garmin_connect_training_readiness_url}/{cdate}"
         logger.debug("Requesting training readiness data")
+
+        return self.connectapi(url)
+
+    def get_training_load_balance(self, cdate: str) -> dict[str, Any]:
+        """Return training load balance (load focus) data for current user."""
+
+        cdate = _validate_date_format(cdate, "cdate")
+        url = f"{self.garmin_connect_training_load_balance_url}/latest/{cdate}"
+        logger.debug("Requesting training load balance data")
 
         return self.connectapi(url)
 
