@@ -1874,6 +1874,45 @@ class Garmin:
         )
         return self.connectapi(url, params=params)
 
+    def get_training_load_activities(
+        self,
+        startdate: str,
+        enddate: str,
+        *,
+        metrics: list[str] | None = None,
+        activitytype: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Fetch individual activities (and their training load metrics) for a date range.
+
+        :param startdate: range start "YYYY-MM-DD"
+        :param enddate: range end "YYYY-MM-DD"
+        :param metrics: optional list of metric fields to request
+        :param activitytype: optional activity type filter
+        :return: list of activities with the requested metrics
+        """
+
+        startdate = _validate_date_format(startdate, "startdate")
+        enddate = _validate_date_format(enddate, "enddate")
+        url = f"{self.garmin_connect_fitnessstats}/all"
+        requested_metrics = metrics or [
+            "activityTrainingLoad",
+            "trainingEffectLabel",
+            "trainingEffectLabelSrvrCalc",
+        ]
+        params: dict[str, Any] = {
+            "startDate": startdate,
+            "endDate": enddate,
+            "metric": requested_metrics,
+        }
+        if activitytype:
+            params["activityType"] = activitytype
+
+        logger.debug(
+            "Requesting training load activities from %s to %s", startdate, enddate
+        )
+        return self.connectapi(url, params=params)
+
     def get_activity_types(self) -> dict[str, Any]:
         url = self.garmin_connect_activity_types
         logger.debug("Requesting activity types")
