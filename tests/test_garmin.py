@@ -1,6 +1,5 @@
-import pytest
-
 import garminconnect
+import pytest
 
 DATE = "2023-07-01"
 

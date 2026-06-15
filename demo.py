@@ -30,14 +30,13 @@ from typing import Any
 
 import readchar
 import requests
-from garth.exc import GarthException, GarthHTTPError
-
 from garminconnect import (
     Garmin,
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
 )
+from garth.exc import GarthException, GarthHTTPError
 
 # Configure logging to reduce verbose error output from garminconnect library
 # This prevents double error messages for known API issues
