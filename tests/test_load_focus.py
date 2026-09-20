@@ -45,9 +45,25 @@ def test_invalid_dates_do_not_send_requests(garmin, method, args):
     garmin.connectapi.assert_not_called()
 
 
-@pytest.mark.parametrize("metrics", [None, [], ["activityTrainingLoad"]])
+@pytest.mark.parametrize(
+    "metrics,expected_metrics",
+    [
+        (
+            None,
+            [
+                "activityTrainingLoad",
+                "trainingEffectLabel",
+                "trainingEffectLabelSrvrCalc",
+            ],
+        ),
+        ([], []),
+        (["activityTrainingLoad"], ["activityTrainingLoad"]),
+    ],
+)
 @pytest.mark.parametrize("activitytype", [None, "running"])
-def test_activity_load_metrics_and_filter(garmin, metrics, activitytype):
+def test_activity_load_metrics_and_filter(
+    garmin, metrics, expected_metrics, activitytype
+):
     response = [{"activityTrainingLoad": 123}]
     garmin.connectapi.return_value = response
     assert (
@@ -59,12 +75,7 @@ def test_activity_load_metrics_and_filter(garmin, metrics, activitytype):
     params = {
         "startDate": "2026-09-01",
         "endDate": "2026-09-20",
-        "metric": metrics
-        or [
-            "activityTrainingLoad",
-            "trainingEffectLabel",
-            "trainingEffectLabelSrvrCalc",
-        ],
+        "metric": expected_metrics,
     }
     if activitytype:
         params["activityType"] = activitytype
