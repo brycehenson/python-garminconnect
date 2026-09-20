@@ -1,0 +1,73 @@
+"""Offline regression tests for the load-focus API methods."""
+
+from unittest.mock import Mock
+
+import pytest
+
+from garminconnect import Garmin
+
+
+@pytest.fixture
+def garmin():
+    client = Garmin()
+    client.connectapi = Mock()
+    return client
+
+
+@pytest.mark.parametrize(
+    "method,path",
+    [
+        ("get_training_monthly_load_balance", "trainingloadbalance/latest"),
+        ("get_weekly_training_load", "trainingstatus/daily"),
+    ],
+)
+def test_load_summary(garmin, method, path):
+    response = {"load": 123}
+    garmin.connectapi.return_value = response
+    assert getattr(garmin, method)("2026-09-20") is response
+    garmin.connectapi.assert_called_once_with(
+        f"/metrics-service/metrics/{path}/2026-09-20"
+    )
+
+
+@pytest.mark.parametrize(
+    "method,args",
+    [
+        ("get_training_monthly_load_balance", ("bad-date",)),
+        ("get_weekly_training_load", ("2026-02-30",)),
+        ("get_training_load_activities", ("bad-date", "2026-09-20")),
+        ("get_training_load_activities", ("2026-09-01", "bad-date")),
+    ],
+)
+def test_invalid_dates_do_not_send_requests(garmin, method, args):
+    with pytest.raises(ValueError):
+        getattr(garmin, method)(*args)
+    garmin.connectapi.assert_not_called()
+
+
+@pytest.mark.parametrize("metrics", [None, [], ["activityTrainingLoad"]])
+@pytest.mark.parametrize("activitytype", [None, "running"])
+def test_activity_load_metrics_and_filter(garmin, metrics, activitytype):
+    response = [{"activityTrainingLoad": 123}]
+    garmin.connectapi.return_value = response
+    assert (
+        garmin.get_training_load_activities(
+            "2026-09-01", "2026-09-20", metrics=metrics, activitytype=activitytype
+        )
+        is response
+    )
+    params = {
+        "startDate": "2026-09-01",
+        "endDate": "2026-09-20",
+        "metric": metrics
+        or [
+            "activityTrainingLoad",
+            "trainingEffectLabel",
+            "trainingEffectLabelSrvrCalc",
+        ],
+    }
+    if activitytype:
+        params["activityType"] = activitytype
+    garmin.connectapi.assert_called_once_with(
+        "/fitnessstats-service/activity/all", params=params
+    )
